@@ -79,6 +79,18 @@ function App() {
 
       <GameStatus winner={winner} isDraw={isDraw}  isX={isX} />
 
+      {/* Fireworks */}
+      {winner && (
+        <div className="fireworks">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      )}
+
 
       <Board board={board} handleClick={handleClick} />
       
