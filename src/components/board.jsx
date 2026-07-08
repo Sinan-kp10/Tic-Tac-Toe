@@ -13,9 +13,7 @@ function Board({ board, handleClick }) {
       ))}
 
     </div>
-
   );
-
 }
 
 export default Board;

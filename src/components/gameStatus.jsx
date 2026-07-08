@@ -7,9 +7,6 @@ function GameStatus({winner, isDraw, isX }){
             ? "🤝 Match Draw!"
             : `Turn : ${isX ? "X" : "O"}`}
     </h2>
-
-        
-
     )
 }
 

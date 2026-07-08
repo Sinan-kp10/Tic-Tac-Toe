@@ -42,8 +42,6 @@ function App() {
   const winner = calculateWinner(board)
   const isDraw = !winner && board.every((sq)=> sq !== "")
 
-
-
   function handleClick(index){
 
     if (winner || isDraw) return;
@@ -90,7 +88,6 @@ function App() {
           <span></span>
         </div>
       )}
-
 
       <Board board={board} handleClick={handleClick} />
       
