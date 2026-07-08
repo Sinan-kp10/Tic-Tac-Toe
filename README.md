@@ -1,16 +1,133 @@
-# React + Vite
+# 🎮 Tic-Tac-Toe Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple and interactive Tic-Tac-Toe game built with **React.js**. This project was created to practice React fundamentals such as Components, Props, State Management, Event Handling, Conditional Rendering, and Component Communication.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+- ✅ 3 × 3 Tic-Tac-Toe board
+- ✅ Two-player gameplay (X and O)
+- ✅ Alternate player turns
+- ✅ Winner detection
+- ✅ Draw detection
+- ✅ Prevents overwriting occupied squares
+- ✅ Restart game functionality
+- ✅ Winner celebration animation
+- ✅ Responsive and clean UI
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Technologies Used
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React.js
+- JavaScript (ES6+)
+- CSS3
+- Vite
+
+---
+
+## 📂 Project Structure
+
+```text
+src/
+│
+├── components/
+│   ├── Board.jsx
+│   ├── Square.jsx
+│   └── GameStatus.jsx
+│
+├── App.jsx
+├── App.css
+├── main.jsx
+└── index.css
+```
+
+---
+
+## 📚 React Concepts Covered
+
+- Functional Components
+- JSX
+- Props
+- useState Hook
+- Event Handling
+- Conditional Rendering
+- Rendering Lists using map()
+- Parent → Child Communication
+- Child → Parent Communication using Callback Functions
+- Component Reusability
+- State Lifting
+- Array Manipulation
+- Game Logic Implementation
+
+---
+
+## ⚙️ Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/Sinan-kp10/Tic-Tac-Toe
+```
+
+Navigate into the project
+
+```bash
+cd tic-tac-toe
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Start the development server
+
+```bash
+npm run dev
+```
+
+Open your browser and visit
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 🎯 Game Rules
+
+- Player **X** always starts first.
+- Players take turns placing their symbol.
+- Three matching symbols in a row, column, or diagonal wins the game.
+- If all squares are filled without a winner, the game ends in a draw.
+- Click **Restart Game** to start a new match.
+
+---
+
+
+## 🔮 Future Improvements
+
+- 🤖 Play against AI
+- 🌙 Dark / Light Theme
+- 🔊 Sound Effects
+- 🎆 Better Winner Animation
+- 📱 Fully Responsive Design
+- 📊 Scoreboard
+- ⏪ Move History (Time Travel)
+
+---
+
+## 👨‍💻 Author
+
+**Muhammed Sinan KP**
+
+GitHub: https://github.com/Sinan-kp10
+
+---
+
+## 📄 License
+
+This project is created for learning React and is free to use for educational purposes.
