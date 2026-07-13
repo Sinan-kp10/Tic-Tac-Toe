@@ -15,6 +15,7 @@ A simple and interactive Tic-Tac-Toe game built with **React.js**. This project 
 - ✅ Restart game functionality
 - ✅ Winner celebration animation
 - ✅ Responsive and clean UI
+- ✅ Play against AI (Easy, Medium, and Hard difficulties)
 
 ---
 
@@ -35,7 +36,15 @@ src/
 ├── components/
 │   ├── Board.jsx
 │   ├── Square.jsx
-│   └── GameStatus.jsx
+│   ├── GameStatus.jsx
+│   ├── Difficulty.jsx
+│   └── GameMode.jsx
+│
+├── hooks/
+│   └── useTicTacToe.js
+│
+├── utils/
+│   └── gameLogic.js
 │
 ├── App.jsx
 ├── App.css
@@ -110,11 +119,9 @@ http://localhost:5173
 
 ## 🔮 Future Improvements
 
-- 🤖 Play against AI
 - 🌙 Dark / Light Theme
 - 🔊 Sound Effects
 - 🎆 Better Winner Animation
-- 📱 Fully Responsive Design
 - 📊 Scoreboard
 - ⏪ Move History (Time Travel)
 
