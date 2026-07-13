@@ -135,6 +135,8 @@
 
 .board{
 
+    position:relative;
+
     display:grid;
 
     grid-template-columns:repeat(3,120px);
@@ -226,8 +228,118 @@
 }
 
 /* ===========================
-      RESTART BUTTON
+       WINNING LINE
 =========================== */
+
+.winning-line {
+    position: absolute;
+    border-radius: 4px;
+    transition: all 0.5s ease-in-out;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 12px currentColor;
+}
+
+.winning-line.winner-X {
+    background: #38bdf8;
+    color: #38bdf8;
+}
+
+.winning-line.winner-O {
+    background: #fb7185;
+    color: #fb7185;
+}
+
+/* Row 0 */
+.winning-line.combo-0 {
+    top: 18.4%;
+    left: 4.2%;
+    width: 91.6%;
+    height: 6px;
+    transform: translateY(-50%);
+}
+
+/* Row 1 */
+.winning-line.combo-1 {
+    top: 50%;
+    left: 4.2%;
+    width: 91.6%;
+    height: 6px;
+    transform: translateY(-50%);
+}
+
+/* Row 2 */
+.winning-line.combo-2 {
+    top: 81.6%;
+    left: 4.2%;
+    width: 91.6%;
+    height: 6px;
+    transform: translateY(-50%);
+}
+
+/* Column 0 */
+.winning-line.combo-3 {
+    left: 18.4%;
+    top: 4.2%;
+    height: 91.6%;
+    width: 6px;
+    transform: translateX(-50%);
+}
+
+/* Column 1 */
+.winning-line.combo-4 {
+    left: 50%;
+    top: 4.2%;
+    height: 91.6%;
+    width: 6px;
+    transform: translateX(-50%);
+}
+
+/* Column 2 */
+.winning-line.combo-5 {
+    left: 81.6%;
+    top: 4.2%;
+    height: 91.6%;
+    width: 6px;
+    transform: translateX(-50%);
+}
+
+/* Diagonal \ */
+.winning-line.combo-6 {
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 6px;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Diagonal / */
+.winning-line.combo-7 {
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 6px;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ===========================
+      RESTART BUTTON & ACTIONS
+=========================== */
+
+.actions-container{
+    display:flex;
+    gap:16px;
+    margin-top:30px;
+    justify-content:center;
+    width:min(460px, 90vw);
+}
+
+.actions-container .restart-btn,
+.actions-container .menu-btn{
+    margin-top:0;
+    flex:1;
+    width:auto;
+}
 
 .restart-btn{
 
@@ -275,6 +387,31 @@
 
     transform:scale(.97);
 
+}
+
+.menu-btn{
+    padding:15px;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px;
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(15px);
+    color:white;
+    font-size:17px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.menu-btn:hover{
+    transform:translateY(-3px);
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.25);
+    box-shadow:0 8px 18px rgba(255,255,255,.15);
+}
+
+.menu-btn:active{
+    transform:scale(.97);
 }
 
 /* ===========================
@@ -437,13 +574,18 @@ font-size:16px;
 
 }
 
-.restart-btn{
-
-width:170px;
+.restart-btn,
+.menu-btn{
 
 padding:13px;
 
 font-size:15px;
+
+}
+
+.restart-btn{
+
+width:170px;
 
 }
 

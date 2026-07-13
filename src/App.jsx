@@ -14,9 +14,11 @@ function App() {
     difficulty,
     setDifficulty,
     winner,
+    winningLine,
     isDraw,
     handleClick,
     restartGame,
+    goToMenu,
   } = useTicTacToe();
 
   if (gameMode === "") {
@@ -45,11 +47,22 @@ function App() {
         </div>
       )}
 
-      <Board board={board} handleClick={handleClick} />
+      <Board board={board} handleClick={handleClick} winner={winner} winningLine={winningLine} />
 
-      <button className="restart-btn" onClick={restartGame}>
-        Restart Game
-      </button>
+      {winner || isDraw ? (
+        <div className="actions-container">
+          <button className="restart-btn" onClick={restartGame}>
+            Restart Game
+          </button>
+          <button className="menu-btn" onClick={goToMenu}>
+            Menu
+          </button>
+        </div>
+      ) : (
+        <button className="restart-btn" onClick={restartGame}>
+          Restart Game
+        </button>
+      )}
     </div>
   );
 }

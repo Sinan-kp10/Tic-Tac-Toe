@@ -4,6 +4,7 @@ import {
   getEasyMove,
   getMediumMove,
   getHardMove,
+  getWinningLine,
 } from "../utils/gameLogic";
 
 export function useTicTacToe() {
@@ -18,6 +19,7 @@ export function useTicTacToe() {
   const [difficulty, setDifficulty] = useState("");
 
   const winner = calculateWinner(board);
+  const winningLine = getWinningLine(board);
   const isDraw = !winner && board.every((sq) => sq !== "");
 
   function handleClick(index) {
@@ -60,6 +62,17 @@ export function useTicTacToe() {
     setX(true);
   }
 
+  function goToMenu() {
+    setBoard([
+      "", "", "",
+      "", "", "",
+      "", "", ""
+    ]);
+    setX(true);
+    setGameMode("");
+    setDifficulty("");
+  }
+
   // Trigger AI move when it's AI's turn
   useEffect(() => {
     if (gameMode !== "ai") return;
@@ -82,8 +95,10 @@ export function useTicTacToe() {
     difficulty,
     setDifficulty,
     winner,
+    winningLine,
     isDraw,
     handleClick,
     restartGame,
+    goToMenu,
   };
 }
