@@ -1,17 +1,12 @@
-import Square from "./Square";
+import Square from "./square";
 
 function Board({ board, handleClick }) {
-
   return (
-
     <div className="board">
-
-      {board.map((value,index)=>(
-
-        <Square key={index} value={value} onClick={()=>handleClick(index)}/>
-        
+      {board.map((value, index) => (
+        <Square key={index} value={value} onClick={() => handleClick(index)} />
       ))}
-
+      
     </div>
   );
 }

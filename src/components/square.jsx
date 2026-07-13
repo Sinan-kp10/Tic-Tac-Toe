@@ -1,7 +1,7 @@
 
 function Square({value , onClick}){
     return (
-        <div className="square" onClick={onClick}>{value}</div>
+        <div className={`square ${value}`} onClick={onClick}>{value}</div>
     )
 }
 
