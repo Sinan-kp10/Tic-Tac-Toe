@@ -1,4 +1,4 @@
-import Square from "./square";
+import Square from "./Square";
 
 function Board({ board, handleClick }) {
   return (
