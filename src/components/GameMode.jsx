@@ -10,6 +10,10 @@ function GameMode({ setGameMode }) {
       <button onClick={() => setGameMode("ai")}>
         🤖 Play Against AI
       </button>
+
+      <button onClick={() => setGameMode("two-players")}>
+        👥 Play Two Players
+      </button>
     </div>
   );
 }
