@@ -1,17 +1,21 @@
-function GameMode({ setGameMode }) {
+import { useNavigate } from "react-router-dom";
+
+function GameMode() {
+  const navigate = useNavigate();
+
   return (
     <div className="menu">
       <h1>Tic Tac Toe</h1>
 
-      <button onClick={() => setGameMode("local")}>
+      <button onClick={() => navigate("/game/local")}>
         👥 Play Locally
       </button>
 
-      <button onClick={() => setGameMode("ai")}>
+      <button onClick={() => navigate("/difficulty")}>
         🤖 Play Against AI
       </button>
 
-      <button onClick={() => setGameMode("two-players")}>
+      <button onClick={() => navigate("/multiplayer")}>
         👥 Play Two Players
       </button>
     </div>

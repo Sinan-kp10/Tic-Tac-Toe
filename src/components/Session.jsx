@@ -1,20 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-function CreateSession({ sessionID, setSessionID, setIsHost }) {
+function CreateSession() {
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(sessionID);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (sessionId) {
+      navigator.clipboard.writeText(sessionId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const sessionKey = `tictactoe_session_${sessionId}`;
+    
+    const checkClientJoined = () => {
+      const dataStr = localStorage.getItem(sessionKey);
+      if (dataStr) {
+        try {
+          const data = JSON.parse(dataStr);
+          if (data.clientJoined) {
+            // Client joined! Navigate to the game screen
+            navigate(`/game/multiplayer/${sessionId}`);
+          }
+        } catch (e) {
+          console.error("Error reading session status:", e);
+        }
+      }
+    };
+
+    // Initial check
+    checkClientJoined();
+
+    // Check periodically
+    const interval = setInterval(checkClientJoined, 500);
+
+    const handleStorageChange = (e) => {
+      if (e.key === sessionKey) {
+        checkClientJoined();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [sessionId, navigate]);
 
   return (
     <div className="session">
       <h1>Session Created</h1>
       <div className="session-card">
         <span className="session-label">Share this ID with Player 2:</span>
-        <div className="session-id-display">{sessionID}</div>
+        <div className="session-id-display">{sessionId}</div>
         <button className="copy-btn" onClick={handleCopy}>
           {copied ? "✓ Copied!" : "📋 Copy Session ID"}
         </button>
@@ -28,9 +71,9 @@ function CreateSession({ sessionID, setSessionID, setIsHost }) {
       <button
         className="back-btn"
         onClick={() => {
-          localStorage.removeItem(`tictactoe_session_${sessionID}`);
-          setSessionID("");
-          setIsHost("");
+          localStorage.removeItem(`tictactoe_session_${sessionId}`);
+          sessionStorage.removeItem(`tictactoe_player_${sessionId}`);
+          navigate("/multiplayer");
         }}
       >
         Cancel & Back
@@ -39,22 +82,39 @@ function CreateSession({ sessionID, setSessionID, setIsHost }) {
   );
 }
 
-function JoinSession({ setIsHost, joinSession }) {
+function JoinSession() {
+  const navigate = useNavigate();
   const [enteredID, setEnteredID] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!enteredID || !enteredID.trim()) {
+    const trimmedId = enteredID.trim();
+    if (!trimmedId) {
       setError("Please enter a Session ID.");
       return;
     }
 
-    const success = joinSession(enteredID.trim());
-    if (!success) {
+    const sessionKey = `tictactoe_session_${trimmedId}`;
+    const dataStr = localStorage.getItem(sessionKey);
+    if (!dataStr) {
       setError("Session ID not found. Ensure the host has created it.");
-    } else {
+      return;
+    }
+
+    try {
+      const data = JSON.parse(dataStr);
+      data.clientJoined = true;
+      localStorage.setItem(sessionKey, JSON.stringify(data));
+
+      // Store in sessionStorage that this user is the visitor (player O)
+      sessionStorage.setItem(`tictactoe_player_${trimmedId}`, "O");
+      
       setError("");
+      navigate(`/game/multiplayer/${trimmedId}`);
+    } catch (err) {
+      console.error("Failed to join session:", err);
+      setError("Failed to join session. Please try again.");
     }
   };
 
@@ -82,7 +142,7 @@ function JoinSession({ setIsHost, joinSession }) {
           type="button"
           className="back-btn"
           onClick={() => {
-            setIsHost("");
+            navigate("/multiplayer");
           }}
         >
           Back

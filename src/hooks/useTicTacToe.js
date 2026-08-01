@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { generateSessionID } from "../utils/SessionGenerator";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   calculateWinner,
   getEasyMove,
@@ -8,7 +8,10 @@ import {
   getWinningLine,
 } from "../utils/gameLogic";
 
-export function useTicTacToe() {
+export function useTicTacToe(gameMode) {
+  const { difficulty, sessionId: sessionID } = useParams();
+  const navigate = useNavigate();
+
   const [board, setBoard] = useState([
     "", "", "",
     "", "", "",
@@ -16,11 +19,10 @@ export function useTicTacToe() {
   ]);
 
   const [isX, setX] = useState(true);
-  const [gameMode, setGameMode] = useState("");
-  const [difficulty, setDifficulty] = useState("");
-  const [sessionID, setSessionID] = useState("");
-  const [isHost, setIsHost] = useState("");
-  const [player, setPlayer] = useState("");
+  
+  const player = gameMode === "two-players" && sessionID
+    ? sessionStorage.getItem(`tictactoe_player_${sessionID}`) || ""
+    : "";
 
   const winner = calculateWinner(board);
   const winningLine = getWinningLine(board);
@@ -57,7 +59,7 @@ export function useTicTacToe() {
     }
   }
 
-  function aiMove() {
+  const aiMove = useCallback(() => {
     let moveIndex = -1;
 
     if (difficulty === "easy") {
@@ -74,46 +76,7 @@ export function useTicTacToe() {
       setBoard(newBoard);
       setX(true);
     }
-  }
-
-  function createSession() {
-    const newId = generateSessionID();
-    setSessionID(newId);
-    setPlayer("X");
-    setIsHost("create-session");
-
-    // Initialize session state in localStorage
-    const sessionKey = `tictactoe_session_${newId}`;
-    const initialSession = {
-      board: Array(9).fill(""),
-      isX: true,
-      hostJoined: true,
-      clientJoined: false
-    };
-    localStorage.setItem(sessionKey, JSON.stringify(initialSession));
-  }
-
-  function joinSession(enteredID) {
-    if (!enteredID) return false;
-    const sessionKey = `tictactoe_session_${enteredID}`;
-    const dataStr = localStorage.getItem(sessionKey);
-    if (!dataStr) return false;
-
-    try {
-      const data = JSON.parse(dataStr);
-      data.clientJoined = true;
-      localStorage.setItem(sessionKey, JSON.stringify(data));
-
-      setSessionID(enteredID);
-      setPlayer("O");
-      setIsHost("client");
-      setGameMode("two-players");
-      return true;
-    } catch (e) {
-      console.error("Failed to join session:", e);
-      return false;
-    }
-  }
+  }, [board, difficulty]);
 
   function restartGame() {
     const emptyBoard = [
@@ -137,17 +100,7 @@ export function useTicTacToe() {
   }
 
   function goToMenu() {
-    setBoard([
-      "", "", "",
-      "", "", "",
-      "", "", ""
-    ]);
-    setX(true);
-    setGameMode("");
-    setDifficulty("");
-    setSessionID("");
-    setIsHost("");
-    setPlayer("");
+    navigate("/");
   }
 
   // Trigger AI move when it's AI's turn
@@ -162,7 +115,7 @@ export function useTicTacToe() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [board, isX, gameMode, difficulty, winner, isDraw]);
+  }, [board, isX, gameMode, difficulty, winner, isDraw, aiMove]);
 
   // Sync logic for Two-Players session
   useEffect(() => {
@@ -183,9 +136,6 @@ export function useTicTacToe() {
           }
           if (data.isX !== undefined && data.isX !== isX) {
             setX(data.isX);
-          }
-          if (isHost === "create-session" && data.clientJoined) {
-            setIsHost("host");
           }
         } catch (e) {
           console.error("Error parsing session data", e);
@@ -209,28 +159,18 @@ export function useTicTacToe() {
       window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
     };
-  }, [gameMode, sessionID, isHost, board, isX]);
+  }, [gameMode, sessionID, board, isX]);
 
   return {
     board,
     isX,
-    gameMode,
-    setGameMode,
-    difficulty,
-    setDifficulty,
     winner,
     winningLine,
     isDraw,
     handleClick,
     restartGame,
     goToMenu,
-    createSession,
-    joinSession,
     sessionID,
-    setSessionID,
-    isHost,
-    setIsHost,
-    player,
-    setPlayer
+    player
   };
 }
