@@ -70,7 +70,7 @@ export function useTicTacToe(gameMode) {
     }
   }
 
-  function restartGame() {
+  function playAgain() {
     const emptyBoard = [
       "", "", "",
       "", "", "",
@@ -221,7 +221,7 @@ export function useTicTacToe(gameMode) {
     handleClick,
     startGame,
     quitGame,
-    restartGame,
+    playAgain,
     goToMenu,
     sessionID,
     player

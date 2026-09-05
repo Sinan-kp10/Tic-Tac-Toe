@@ -1,9 +1,12 @@
+import { useParams } from "react-router-dom";
 import Board from "../components/Board";
 import GameStatus from "../components/GameStatus";
 import Fireworks from "../components/Fireworks";
+import PlayModal from "../components/PlayModal";
 import { useTicTacToe } from "../hooks/useTicTacToe";
 
 function Game({ gameMode }) {
+  const { difficulty } = useParams();
   const {
     board,
     isX,
@@ -14,11 +17,13 @@ function Game({ gameMode }) {
     handleClick,
     startGame,
     quitGame,
-    restartGame,
+    playAgain,
     goToMenu,
     sessionID,
     player
   } = useTicTacToe(gameMode);
+
+  const showPlayModal = !isPlaying && !winner && !isDraw;
 
   return (
     <div className="container">
@@ -47,11 +52,20 @@ function Game({ gameMode }) {
 
       <Board board={board} handleClick={handleClick} winner={winner} winningLine={winningLine} />
 
+      {/* Play Popup Modal with Play and Back buttons */}
+      <PlayModal
+        isOpen={showPlayModal}
+        onPlay={startGame}
+        onBack={goToMenu}
+        gameMode={gameMode}
+        difficulty={difficulty}
+      />
+
       <div className="actions-container">
         {winner || isDraw ? (
           <>
-            <button className="restart-btn" onClick={restartGame}>
-              Restart Game
+            <button className="play-again-btn" onClick={playAgain}>
+              Play Again
             </button>
             <button className="menu-btn" onClick={goToMenu}>
               Back
@@ -61,16 +75,7 @@ function Game({ gameMode }) {
           <button className="quit-btn" onClick={quitGame}>
             Quit
           </button>
-        ) : (
-          <>
-            <button className="play-btn" onClick={startGame}>
-              <span className="play-icon">▶</span> Play Now
-            </button>
-            <button className="menu-btn" onClick={goToMenu}>
-              Back
-            </button>
-          </>
-        )}
+        ) : null}
       </div>
     </div>
   );
