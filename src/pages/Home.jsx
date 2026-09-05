@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-function GameMode() {
+function Home() {
   const navigate = useNavigate();
 
   return (
@@ -22,4 +22,4 @@ function GameMode() {
   );
 }
 
-export default GameMode;
+export default Home;

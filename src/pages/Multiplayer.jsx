@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-function PlayTwoPlayers() {
+function Multiplayer() {
   const navigate = useNavigate();
 
   return (
@@ -36,4 +36,4 @@ function PlayTwoPlayers() {
   );
 }
 
-export default PlayTwoPlayers;
+export default Multiplayer;

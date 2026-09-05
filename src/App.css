@@ -335,7 +335,8 @@
 }
 
 .actions-container .restart-btn,
-.actions-container .menu-btn{
+.actions-container .menu-btn,
+.actions-container .play-btn{
     margin-top:0;
     flex:1;
     width:auto;
@@ -575,7 +576,9 @@ font-size:16px;
 }
 
 .restart-btn,
-.menu-btn{
+.menu-btn,
+.quit-btn,
+.play-btn{
 
 padding:13px;
 
@@ -863,4 +866,134 @@ font-size:17px;
     border-radius: 20px;
     border: 1px solid rgba(255, 238, 88, 0.3);
     font-weight: 600;
+}
+
+/* ===========================
+        QUIT BUTTON
+=========================== */
+
+.quit-btn {
+    padding: 15px;
+    border: 1px solid rgba(255, 80, 80, 0.4);
+    border-radius: 14px;
+    background: rgba(255, 59, 48, 0.15);
+    backdrop-filter: blur(15px);
+    color: #ff6b6b;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .25);
+    width: min(220px, 80vw);
+}
+
+.quit-btn:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 59, 48, 0.35);
+    border-color: rgba(255, 100, 100, 0.6);
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(255, 59, 48, 0.35);
+}
+
+.quit-btn:active {
+    transform: scale(.97);
+}
+
+/* ===========================
+        PLAY BUTTON
+========================== */
+
+.play-btn {
+    position: relative;
+    padding: 16px 28px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #00c6ff 100%);
+    background-size: 200% 200%;
+    color: #04101e;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 14px rgba(0, 229, 255, 0.25);
+    animation: playPulse 2.4s infinite ease-in-out, gradientShift 4s ease infinite;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Shimmer Light Beam Effect */
+.play-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -80%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+        60deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    animation: playShine 3s infinite ease-in-out;
+    pointer-events: none;
+}
+
+.play-btn .play-icon {
+    font-size: 15px;
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+
+.play-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.4);
+    color: #020914;
+}
+
+.play-btn:hover .play-icon {
+    transform: scale(1.2) translateX(2px);
+}
+
+.play-btn:active {
+    transform: scale(0.97) translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 229, 255, 0.25);
+}
+
+@keyframes playPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 14px rgba(0, 229, 255, 0.25);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 18px rgba(0, 229, 255, 0.38);
+    }
+}
+
+@keyframes playShine {
+    0% {
+        left: -80%;
+    }
+    25%, 100% {
+        left: 150%;
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }

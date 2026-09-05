@@ -19,6 +19,7 @@ export function useTicTacToe(gameMode) {
   ]);
 
   const [isX, setX] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const player = gameMode === "two-players" && sessionID
     ? sessionStorage.getItem(`tictactoe_player_${sessionID}`) || ""
@@ -28,8 +29,81 @@ export function useTicTacToe(gameMode) {
   const winningLine = getWinningLine(board);
   const isDraw = !winner && board.every((sq) => sq !== "");
 
+  function startGame() {
+    const emptyBoard = [
+      "", "", "",
+      "", "", "",
+      "", "", ""
+    ];
+    setBoard(emptyBoard);
+    setX(true);
+    setIsPlaying(true);
+
+    if (gameMode === "two-players" && sessionID) {
+      const sessionKey = `tictactoe_session_${sessionID}`;
+      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
+      const updatedData = {
+        ...sessionData,
+        board: emptyBoard,
+        isX: true
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+    }
+  }
+
+  function quitGame() {
+    setIsPlaying(false);
+    const emptyBoard = [
+      "", "", "",
+      "", "", "",
+      "", "", ""
+    ];
+    setBoard(emptyBoard);
+    setX(true);
+
+    if (gameMode === "ai") {
+      navigate("/difficulty");
+    } else if (gameMode === "two-players") {
+      navigate("/multiplayer");
+    } else {
+      navigate("/");
+    }
+  }
+
+  function restartGame() {
+    const emptyBoard = [
+      "", "", "",
+      "", "", "",
+      "", "", ""
+    ];
+    setBoard(emptyBoard);
+    setX(true);
+    setIsPlaying(true);
+
+    if (gameMode === "two-players" && sessionID) {
+      const sessionKey = `tictactoe_session_${sessionID}`;
+      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
+      const updatedData = {
+        ...sessionData,
+        board: emptyBoard,
+        isX: true
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+    }
+  }
+
+  function goToMenu() {
+    if (gameMode === "ai") {
+      navigate("/difficulty");
+    } else if (gameMode === "two-players") {
+      navigate("/multiplayer");
+    } else {
+      navigate("/");
+    }
+  }
+
   function handleClick(index) {
-    if (winner || isDraw) return;
+    if (!isPlaying || winner || isDraw) return;
     if (board[index] !== "") return;
     if (gameMode === "ai" && !isX) return;
 
@@ -78,33 +152,9 @@ export function useTicTacToe(gameMode) {
     }
   }, [board, difficulty]);
 
-  function restartGame() {
-    const emptyBoard = [
-      "", "", "",
-      "", "", "",
-      "", "", ""
-    ];
-    setBoard(emptyBoard);
-    setX(true);
-
-    if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      const updatedData = {
-        ...sessionData,
-        board: emptyBoard,
-        isX: true
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
-    }
-  }
-
-  function goToMenu() {
-    navigate("/");
-  }
-
   // Trigger AI move when it's AI's turn
   useEffect(() => {
+    if (!isPlaying) return;
     if (gameMode !== "ai") return;
     if (isX) return;
     if (winner) return;
@@ -115,7 +165,7 @@ export function useTicTacToe(gameMode) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [board, isX, gameMode, difficulty, winner, isDraw, aiMove]);
+  }, [isPlaying, board, isX, gameMode, difficulty, winner, isDraw, aiMove]);
 
   // Sync logic for Two-Players session
   useEffect(() => {
@@ -164,10 +214,13 @@ export function useTicTacToe(gameMode) {
   return {
     board,
     isX,
+    isPlaying,
     winner,
     winningLine,
     isDraw,
     handleClick,
+    startGame,
+    quitGame,
     restartGame,
     goToMenu,
     sessionID,
