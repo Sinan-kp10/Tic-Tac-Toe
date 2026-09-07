@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import Board from "../components/Board";
 import GameStatus from "../components/GameStatus";
+import ScoreBoard from "../components/ScoreBoard";
 import Fireworks from "../components/Fireworks";
 import PlayModal from "../components/PlayModal";
 import { useTicTacToe } from "../hooks/useTicTacToe";
@@ -14,6 +15,8 @@ function Game({ gameMode }) {
     winner,
     winningLine,
     isDraw,
+    scores,
+    resetScores,
     handleClick,
     startGame,
     quitGame,
@@ -28,6 +31,18 @@ function Game({ gameMode }) {
   return (
     <div className="container">
       <h1>Tic Tac Toe</h1>
+
+      <ScoreBoard
+        scores={scores}
+        gameMode={gameMode}
+        difficulty={difficulty}
+        player={player}
+        isX={isX}
+        isPlaying={isPlaying}
+        winner={winner}
+        isDraw={isDraw}
+        onResetScores={resetScores}
+      />
 
       <GameStatus winner={winner} isDraw={isDraw} isX={isX} isPlaying={isPlaying} />
 

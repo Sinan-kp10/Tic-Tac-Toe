@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   calculateWinner,
@@ -20,6 +20,9 @@ export function useTicTacToe(gameMode) {
 
   const [isX, setX] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [scores, setScores] = useState({ x: 0, o: 0, ties: 0 });
+  const [round, setRound] = useState(1);
+  const scoredRoundRef = useRef(0);
   
   const player = gameMode === "two-players" && sessionID
     ? sessionStorage.getItem(`tictactoe_player_${sessionID}`) || ""
@@ -28,6 +31,41 @@ export function useTicTacToe(gameMode) {
   const winner = calculateWinner(board);
   const winningLine = getWinningLine(board);
   const isDraw = !winner && board.every((sq) => sq !== "");
+
+  // Update scores when a win or draw occurs
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (!winner && !isDraw) return;
+    if (scoredRoundRef.current === round) return;
+
+    scoredRoundRef.current = round;
+
+    if (gameMode === "two-players" && sessionID) {
+      const sessionKey = `tictactoe_session_${sessionID}`;
+      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
+      if (sessionData.scoredRound !== round) {
+        const currentScores = sessionData.scores || scores;
+        const updatedScores = {
+          x: winner === "X" ? currentScores.x + 1 : currentScores.x,
+          o: winner === "O" ? currentScores.o + 1 : currentScores.o,
+          ties: isDraw ? currentScores.ties + 1 : currentScores.ties,
+        };
+        const updatedData = {
+          ...sessionData,
+          scores: updatedScores,
+          scoredRound: round,
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+        setScores(updatedScores);
+      }
+    } else {
+      setScores((prev) => ({
+        x: winner === "X" ? prev.x + 1 : prev.x,
+        o: winner === "O" ? prev.o + 1 : prev.o,
+        ties: isDraw ? prev.ties + 1 : prev.ties,
+      }));
+    }
+  }, [isPlaying, winner, isDraw, round, gameMode, sessionID, scores]);
 
   function startGame() {
     const emptyBoard = [
@@ -38,6 +76,8 @@ export function useTicTacToe(gameMode) {
     setBoard(emptyBoard);
     setX(true);
     setIsPlaying(true);
+    setRound(1);
+    scoredRoundRef.current = 0;
 
     if (gameMode === "two-players" && sessionID) {
       const sessionKey = `tictactoe_session_${sessionID}`;
@@ -45,7 +85,9 @@ export function useTicTacToe(gameMode) {
       const updatedData = {
         ...sessionData,
         board: emptyBoard,
-        isX: true
+        isX: true,
+        round: 1,
+        scores: sessionData.scores || { x: 0, o: 0, ties: 0 }
       };
       localStorage.setItem(sessionKey, JSON.stringify(updatedData));
     }
@@ -79,14 +121,30 @@ export function useTicTacToe(gameMode) {
     setBoard(emptyBoard);
     setX(true);
     setIsPlaying(true);
+    setRound((prev) => prev + 1);
 
+    if (gameMode === "two-players" && sessionID) {
+      const sessionKey = `tictactoe_session_${sessionID}`;
+      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
+      const nextRound = (sessionData.round || round) + 1;
+      const updatedData = {
+        ...sessionData,
+        board: emptyBoard,
+        isX: true,
+        round: nextRound
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+    }
+  }
+
+  function resetScores() {
+    setScores({ x: 0, o: 0, ties: 0 });
     if (gameMode === "two-players" && sessionID) {
       const sessionKey = `tictactoe_session_${sessionID}`;
       const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
       const updatedData = {
         ...sessionData,
-        board: emptyBoard,
-        isX: true
+        scores: { x: 0, o: 0, ties: 0 }
       };
       localStorage.setItem(sessionKey, JSON.stringify(updatedData));
     }
@@ -187,6 +245,12 @@ export function useTicTacToe(gameMode) {
           if (data.isX !== undefined && data.isX !== isX) {
             setX(data.isX);
           }
+          if (data.scores) {
+            setScores(data.scores);
+          }
+          if (data.round && data.round !== round) {
+            setRound(data.round);
+          }
         } catch (e) {
           console.error("Error parsing session data", e);
         }
@@ -209,7 +273,7 @@ export function useTicTacToe(gameMode) {
       window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
     };
-  }, [gameMode, sessionID, board, isX]);
+  }, [gameMode, sessionID, board, isX, round]);
 
   return {
     board,
@@ -218,6 +282,8 @@ export function useTicTacToe(gameMode) {
     winner,
     winningLine,
     isDraw,
+    scores,
+    resetScores,
     handleClick,
     startGame,
     quitGame,
