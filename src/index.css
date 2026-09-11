@@ -136,7 +136,7 @@ body {
   color: var(--text-primary);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 button {
@@ -146,4 +146,24 @@ button {
 img {
   max-width: 100%;
   display: block;
+}
+
+/* ========================================================
+   VIEW TRANSITIONS API - FULL PAGE CIRCULAR THEME ANIMATION
+======================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  transform: none;
+  height: 100%;
+  overflow: clip;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 999999;
 }
