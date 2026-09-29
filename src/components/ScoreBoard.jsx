@@ -1,3 +1,5 @@
+import React, { useMemo } from "react";
+
 function ScoreBoard({
   scores,
   gameMode,
@@ -9,27 +11,33 @@ function ScoreBoard({
   isDraw,
   onResetScores,
 }) {
-  // Determine labels
-  let xLabel = "Player X";
-  let oLabel = "Player O";
+  // Memoize player labels
+  const { xLabel, oLabel } = useMemo(() => {
+    let x = "Player X";
+    let o = "Player O";
 
-  if (gameMode === "ai") {
-    xLabel = "You (X)";
-    const diffText = difficulty
-      ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
-      : "Bot";
-    oLabel = `AI (${diffText})`;
-  } else if (gameMode === "two-players") {
-    xLabel = player === "X" ? "You (X)" : "Host (X)";
-    oLabel = player === "O" ? "You (O)" : "Visitor (O)";
-  }
+    if (gameMode === "ai") {
+      x = "You (X)";
+      const diffText = difficulty
+        ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+        : "Bot";
+      o = `AI (${diffText})`;
+    } else if (gameMode === "two-players") {
+      x = player === "X" ? "You (X)" : "Host (X)";
+      o = player === "O" ? "You (O)" : "Visitor (O)";
+    }
+
+    return { xLabel: x, oLabel: o };
+  }, [gameMode, difficulty, player]);
 
   const isXActive = isPlaying && isX && !winner && !isDraw;
   const isOActive = isPlaying && !isX && !winner && !isDraw;
   const isXWinner = winner === "X";
   const isOWinner = winner === "O";
 
-  const hasScore = (scores?.x || 0) > 0 || (scores?.o || 0) > 0 || (scores?.ties || 0) > 0;
+  const hasScore = useMemo(() => {
+    return (scores?.x || 0) > 0 || (scores?.o || 0) > 0 || (scores?.ties || 0) > 0;
+  }, [scores]);
 
   return (
     <div className="scoreboard-wrapper">
@@ -106,4 +114,4 @@ function ScoreBoard({
   );
 }
 
-export default ScoreBoard;
+export default React.memo(ScoreBoard);

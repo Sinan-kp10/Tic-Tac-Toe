@@ -1,65 +1,77 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { subscribeSession, leaveSession } from "../firebase";
 
 function CreateSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopyCode = useCallback(() => {
     if (sessionId) {
       navigator.clipboard.writeText(sessionId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
     }
-  };
+  }, [sessionId]);
 
+  const handleCopyLink = useCallback(() => {
+    if (sessionId) {
+      const shareUrl = `${window.location.origin}/game/multiplayer/${sessionId}`;
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  }, [sessionId]);
+
+  // Real-time Firestore subscription to detect when Player 2 joins
   useEffect(() => {
     if (!sessionId) return;
-    const sessionKey = `tictactoe_session_${sessionId}`;
-    
-    const checkClientJoined = () => {
-      const dataStr = localStorage.getItem(sessionKey);
-      if (dataStr) {
-        try {
-          const data = JSON.parse(dataStr);
-          if (data.clientJoined) {
-            // Client joined! Navigate to the game screen
-            navigate(`/game/multiplayer/${sessionId}`);
-          }
-        } catch (e) {
-          console.error("Error reading session status:", e);
+
+    const unsubscribe = subscribeSession(
+      sessionId,
+      (data) => {
+        if (data && data.clientJoined) {
+          // Client has joined! Automatically navigate host to the game screen
+          navigate(`/game/multiplayer/${sessionId}`);
         }
+      },
+      (err) => {
+        console.error("Session listener error:", err);
       }
-    };
-
-    // Initial check
-    checkClientJoined();
-
-    // Check periodically
-    const interval = setInterval(checkClientJoined, 500);
-
-    const handleStorageChange = (e) => {
-      if (e.key === sessionKey) {
-        checkClientJoined();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
+    );
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", handleStorageChange);
+      unsubscribe();
     };
+  }, [sessionId, navigate]);
+
+  const handleCancel = useCallback(async () => {
+    if (sessionId) {
+      sessionStorage.removeItem(`tictactoe_player_${sessionId}`);
+      await leaveSession(sessionId);
+    }
+    navigate("/multiplayer");
   }, [sessionId, navigate]);
 
   return (
     <div className="session">
       <h1>Session Created</h1>
       <div className="session-card">
-        <span className="session-label">Share this ID with Player 2:</span>
+        <span className="session-label">Share this Room Code with Player 2:</span>
         <div className="session-id-display">{sessionId}</div>
-        <button className="copy-btn" onClick={handleCopy}>
-          {copied ? "✓ Copied!" : "📋 Copy Session ID"}
+
+        <button className="copy-btn" onClick={handleCopyCode}>
+          {copiedCode ? "✓ Code Copied!" : "📋 Copy Room Code"}
+        </button>
+
+        <button
+          className="copy-btn"
+          onClick={handleCopyLink}
+          style={{ background: "transparent", border: "1px solid var(--btn-primary-bg)", color: "var(--color-x)" }}
+        >
+          {copiedLink ? "✓ Link Copied!" : "🔗 Copy Direct Link"}
         </button>
       </div>
 
@@ -68,15 +80,8 @@ function CreateSession() {
         <span className="waiting-text">Waiting for Player 2 to join...</span>
       </div>
 
-      <button
-        className="back-btn"
-        onClick={() => {
-          localStorage.removeItem(`tictactoe_session_${sessionId}`);
-          sessionStorage.removeItem(`tictactoe_player_${sessionId}`);
-          navigate("/multiplayer");
-        }}
-      >
-        Back
+      <button className="back-btn" onClick={handleCancel}>
+        ← Cancel & Back
       </button>
     </div>
   );

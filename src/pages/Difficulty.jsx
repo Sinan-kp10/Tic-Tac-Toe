@@ -19,8 +19,8 @@ function Difficulty() {
         🔴 Hard
       </button>
 
-      <button className="back-btn" style={{ marginTop: "1rem" }} onClick={() => navigate("/")}>
-        Back
+      <button className="back-btn" onClick={() => navigate("/")}>
+        ← Back
       </button>
     </div>
   );

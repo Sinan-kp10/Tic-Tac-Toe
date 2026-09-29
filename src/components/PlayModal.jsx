@@ -1,3 +1,5 @@
+import React from "react";
+
 function PlayModal({ isOpen, onPlay, onBack, gameMode, difficulty }) {
   if (!isOpen) return null;
 
@@ -27,8 +29,8 @@ function PlayModal({ isOpen, onPlay, onBack, gameMode, difficulty }) {
           <button className="modal-play-btn" onClick={onPlay}>
             ▶ Play
           </button>
-          <button className="modal-back-btn" onClick={onBack}>
-            Back
+          <button className="back-btn" onClick={onBack}>
+            ← Back
           </button>
         </div>
       </div>
@@ -36,4 +38,4 @@ function PlayModal({ isOpen, onPlay, onBack, gameMode, difficulty }) {
   );
 }
 
-export default PlayModal;
+export default React.memo(PlayModal);

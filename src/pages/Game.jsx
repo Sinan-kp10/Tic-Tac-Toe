@@ -23,15 +23,34 @@ function Game({ gameMode }) {
     playAgain,
     goToMenu,
     sessionID,
-    player
+    player,
+    opponentDisconnected,
   } = useTicTacToe(gameMode);
 
-  const showPlayModal = !isPlaying && !winner && !isDraw;
+  const showPlayModal = !isPlaying && !winner && !isDraw && !opponentDisconnected;
 
   return (
     <div className="container game-container">
       {/* Fireworks celebration */}
       {winner && <Fireworks />}
+
+      {/* Opponent Disconnected Modal */}
+      {opponentDisconnected && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-icon">⚠️</div>
+            <h2 className="modal-title">Opponent Left</h2>
+            <p className="modal-subtitle">
+              Your opponent has disconnected or ended the session.
+            </p>
+            <div className="modal-actions">
+              <button className="modal-play-btn" onClick={goToMenu}>
+                Back to Lobby
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="game-layout">
         {/* Left Side (Info, Scores & Controls) */}
@@ -54,7 +73,7 @@ function Game({ gameMode }) {
 
           {gameMode === "two-players" && sessionID && isPlaying && (
             <div className="role-indicator">
-              Playing as: <span className={player === "X" ? "player-x-label" : "player-o-label"}>{player}</span>
+              Playing as: <span className={player === "X" ? "player-x-label" : "player-o-label"}>{player || "..."}</span>
               {player === "X" ? " (Host)" : " (Visitor)"}
               <div className="turn-status">
                 {winner || isDraw ? (
@@ -74,8 +93,8 @@ function Game({ gameMode }) {
                 <button className="play-again-btn" onClick={playAgain}>
                   Play Again
                 </button>
-                <button className="menu-btn" onClick={goToMenu}>
-                  Back
+                <button className="back-btn" onClick={goToMenu}>
+                  ← Back
                 </button>
               </>
             ) : isPlaying ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   calculateWinner,
@@ -7,30 +7,113 @@ import {
   getHardMove,
   getWinningLine,
 } from "../utils/gameLogic";
+import {
+  subscribeSession,
+  updateMove,
+  updateScores,
+  restartGame,
+  resetSessionScores,
+  leaveSession,
+  joinSession,
+} from "../firebase";
+
+const EMPTY_BOARD = ["", "", "", "", "", "", "", "", ""];
 
 export function useTicTacToe(gameMode) {
   const { difficulty, sessionId: sessionID } = useParams();
   const navigate = useNavigate();
 
-  const [board, setBoard] = useState([
-    "", "", "",
-    "", "", "",
-    "", "", ""
-  ]);
-
+  const [board, setBoard] = useState(EMPTY_BOARD);
   const [isX, setX] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [scores, setScores] = useState({ x: 0, o: 0, ties: 0 });
   const [round, setRound] = useState(1);
-  const scoredRoundRef = useRef(0);
-  
-  const player = gameMode === "two-players" && sessionID
-    ? sessionStorage.getItem(`tictactoe_player_${sessionID}`) || ""
-    : "";
+  const [playerRole, setPlayerRole] = useState(() => {
+    if (gameMode === "two-players" && sessionID) {
+      return sessionStorage.getItem(`tictactoe_player_${sessionID}`) || "";
+    }
+    return "";
+  });
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
 
-  const winner = calculateWinner(board);
-  const winningLine = getWinningLine(board);
-  const isDraw = !winner && board.every((sq) => sq !== "");
+  const scoredRoundRef = useRef(0);
+
+  // Derived state memoized for high performance
+  const winner = useMemo(() => calculateWinner(board), [board]);
+  const winningLine = useMemo(() => getWinningLine(board), [board]);
+  const isDraw = useMemo(
+    () => !winner && board.every((sq) => sq !== ""),
+    [winner, board]
+  );
+
+  // Auto-join direct link visitors as Player O if role is not set yet
+  useEffect(() => {
+    if (gameMode !== "two-players" || !sessionID) return;
+
+    const existingRole = sessionStorage.getItem(`tictactoe_player_${sessionID}`);
+    if (!existingRole) {
+      joinSession(sessionID)
+        .then(() => {
+          sessionStorage.setItem(`tictactoe_player_${sessionID}`, "O");
+          setPlayerRole("O");
+        })
+        .catch((err) => {
+          console.error("Direct join error:", err);
+        });
+    } else {
+      setPlayerRole(existingRole);
+    }
+  }, [gameMode, sessionID]);
+
+  // Real-time synchronization for Firebase Two-Players session
+  useEffect(() => {
+    if (gameMode !== "two-players" || !sessionID) return;
+
+    const unsubscribe = subscribeSession(
+      sessionID,
+      (data) => {
+        if (!data) {
+          // Document was removed or room was closed
+          setOpponentDisconnected(true);
+          return;
+        }
+
+        if (data.board) {
+          setBoard((prev) => {
+            const hasChanged = prev.some((val, idx) => val !== data.board[idx]);
+            return hasChanged ? data.board : prev;
+          });
+        }
+
+        if (typeof data.isX === "boolean") {
+          setX(data.isX);
+        }
+
+        if (data.scores) {
+          setScores(data.scores);
+        }
+
+        if (data.round) {
+          setRound(data.round);
+        }
+
+        if (data.scoredRound) {
+          scoredRoundRef.current = data.scoredRound;
+        }
+
+        if (data.status === "playing" || data.clientJoined) {
+          setIsPlaying(true);
+        }
+      },
+      (err) => {
+        console.error("Error in Firebase subscription:", err);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [gameMode, sessionID]);
 
   // Update scores when a win or draw occurs
   useEffect(() => {
@@ -41,156 +124,138 @@ export function useTicTacToe(gameMode) {
     scoredRoundRef.current = round;
 
     if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      if (sessionData.scoredRound !== round) {
-        const currentScores = sessionData.scores || scores;
-        const updatedScores = {
-          x: winner === "X" ? currentScores.x + 1 : currentScores.x,
-          o: winner === "O" ? currentScores.o + 1 : currentScores.o,
-          ties: isDraw ? currentScores.ties + 1 : currentScores.ties,
+      // In multiplayer, the host (Player X) or winning player updates the authoritative score in Firestore
+      // To avoid duplicate score increments from both peers simultaneously, player X updates it
+      const shouldUpdateFirestore = playerRole === "X" || (winner === playerRole);
+
+      if (shouldUpdateFirestore) {
+        const nextScores = {
+          x: winner === "X" ? scores.x + 1 : scores.x,
+          o: winner === "O" ? scores.o + 1 : scores.o,
+          ties: isDraw ? scores.ties + 1 : scores.ties,
         };
-        const updatedData = {
-          ...sessionData,
-          scores: updatedScores,
-          scoredRound: round,
-        };
-        localStorage.setItem(sessionKey, JSON.stringify(updatedData));
-        setScores(updatedScores);
+        updateScores(sessionID, nextScores, round).catch((err) => {
+          console.error("Failed to update scores in Firestore:", err);
+        });
       }
     } else {
+      // Local or AI mode
       setScores((prev) => ({
         x: winner === "X" ? prev.x + 1 : prev.x,
         o: winner === "O" ? prev.o + 1 : prev.o,
         ties: isDraw ? prev.ties + 1 : prev.ties,
       }));
     }
-  }, [isPlaying, winner, isDraw, round, gameMode, sessionID, scores]);
+  }, [isPlaying, winner, isDraw, round, gameMode, sessionID, scores, playerRole]);
 
-  function startGame() {
-    const emptyBoard = [
-      "", "", "",
-      "", "", "",
-      "", "", ""
-    ];
-    setBoard(emptyBoard);
+  // Start / initialize game
+  const startGame = useCallback(() => {
+    setBoard(EMPTY_BOARD);
     setX(true);
     setIsPlaying(true);
     setRound(1);
     scoredRoundRef.current = 0;
 
     if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      const updatedData = {
-        ...sessionData,
-        board: emptyBoard,
-        isX: true,
-        round: 1,
-        scores: sessionData.scores || { x: 0, o: 0, ties: 0 }
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+      restartGame(sessionID, 1).catch((err) => {
+        console.error("Failed to start Firebase session:", err);
+      });
     }
-  }
+  }, [gameMode, sessionID]);
 
-  function quitGame() {
+  // Quit game and clean up session
+  const quitGame = useCallback(async () => {
     setIsPlaying(false);
-    const emptyBoard = [
-      "", "", "",
-      "", "", "",
-      "", "", ""
-    ];
-    setBoard(emptyBoard);
+    setBoard(EMPTY_BOARD);
     setX(true);
 
-    if (gameMode === "ai") {
-      navigate("/difficulty");
-    } else if (gameMode === "two-players") {
+    if (gameMode === "two-players" && sessionID) {
+      sessionStorage.removeItem(`tictactoe_player_${sessionID}`);
+      await leaveSession(sessionID);
       navigate("/multiplayer");
+    } else if (gameMode === "ai") {
+      navigate("/difficulty");
     } else {
       navigate("/");
     }
-  }
+  }, [gameMode, sessionID, navigate]);
 
-  function playAgain() {
-    const emptyBoard = [
-      "", "", "",
-      "", "", "",
-      "", "", ""
-    ];
-    setBoard(emptyBoard);
+  // Play another round
+  const playAgain = useCallback(() => {
+    const nextRound = round + 1;
+    setBoard(EMPTY_BOARD);
     setX(true);
     setIsPlaying(true);
-    setRound((prev) => prev + 1);
+    setRound(nextRound);
 
     if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      const nextRound = (sessionData.round || round) + 1;
-      const updatedData = {
-        ...sessionData,
-        board: emptyBoard,
-        isX: true,
-        round: nextRound
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
+      restartGame(sessionID, nextRound).catch((err) => {
+        console.error("Failed to restart Firebase game:", err);
+      });
     }
-  }
+  }, [gameMode, sessionID, round]);
 
-  function resetScores() {
+  // Reset scores to 0
+  const resetScores = useCallback(() => {
     setScores({ x: 0, o: 0, ties: 0 });
-    if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      const updatedData = {
-        ...sessionData,
-        scores: { x: 0, o: 0, ties: 0 }
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
-    }
-  }
 
-  function goToMenu() {
-    if (gameMode === "ai") {
-      navigate("/difficulty");
-    } else if (gameMode === "two-players") {
+    if (gameMode === "two-players" && sessionID) {
+      resetSessionScores(sessionID).catch((err) => {
+        console.error("Failed to reset scores in Firestore:", err);
+      });
+    }
+  }, [gameMode, sessionID]);
+
+  // Return to previous menu
+  const goToMenu = useCallback(async () => {
+    if (gameMode === "two-players" && sessionID) {
+      sessionStorage.removeItem(`tictactoe_player_${sessionID}`);
+      await leaveSession(sessionID);
       navigate("/multiplayer");
+    } else if (gameMode === "ai") {
+      navigate("/difficulty");
     } else {
       navigate("/");
     }
-  }
+  }, [gameMode, sessionID, navigate]);
 
-  function handleClick(index) {
-    if (!isPlaying || winner || isDraw) return;
-    if (board[index] !== "") return;
-    if (gameMode === "ai" && !isX) return;
+  // Handle square clicks
+  const handleClick = useCallback(
+    (index) => {
+      if (!isPlaying || winner || isDraw) return;
+      if (board[index] !== "") return;
+      if (gameMode === "ai" && !isX) return;
 
-    // In two-players multiplayer mode, restrict moves to the active player's turn
-    if (gameMode === "two-players" && sessionID) {
-      if (isX && player !== "X") return;
-      if (!isX && player !== "O") return;
-    }
+      // In two-players online mode, enforce strict turn control
+      if (gameMode === "two-players" && sessionID) {
+        if (isX && playerRole !== "X") return;
+        if (!isX && playerRole !== "O") return;
 
-    const newBoard = [...board];
-    newBoard[index] = isX ? "X" : "O";
+        const newBoard = [...board];
+        newBoard[index] = isX ? "X" : "O";
+        const nextIsX = !isX;
 
-    const nextIsX = !isX;
-    setBoard(newBoard);
-    setX(nextIsX);
+        // Optimistically update board locally for zero perceived latency
+        setBoard(newBoard);
+        setX(nextIsX);
 
-    // If it's a multiplayer session, update localStorage
-    if (gameMode === "two-players" && sessionID) {
-      const sessionKey = `tictactoe_session_${sessionID}`;
-      const sessionData = JSON.parse(localStorage.getItem(sessionKey)) || {};
-      const updatedData = {
-        ...sessionData,
-        board: newBoard,
-        isX: nextIsX
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(updatedData));
-    }
-  }
+        // Sync to Firebase Firestore
+        updateMove(sessionID, newBoard, nextIsX).catch((err) => {
+          console.error("Failed to update move in Firestore:", err);
+        });
+        return;
+      }
 
+      // Local / AI mode
+      const newBoard = [...board];
+      newBoard[index] = isX ? "X" : "O";
+      setBoard(newBoard);
+      setX((prev) => !prev);
+    },
+    [isPlaying, winner, isDraw, board, gameMode, isX, sessionID, playerRole]
+  );
+
+  // AI Move calculation
   const aiMove = useCallback(() => {
     let moveIndex = -1;
 
@@ -210,7 +275,7 @@ export function useTicTacToe(gameMode) {
     }
   }, [board, difficulty]);
 
-  // Trigger AI move when it's AI's turn
+  // AI turn trigger
   useEffect(() => {
     if (!isPlaying) return;
     if (gameMode !== "ai") return;
@@ -223,57 +288,7 @@ export function useTicTacToe(gameMode) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, board, isX, gameMode, difficulty, winner, isDraw, aiMove]);
-
-  // Sync logic for Two-Players session
-  useEffect(() => {
-    if (gameMode !== "two-players" || !sessionID) return;
-
-    const sessionKey = `tictactoe_session_${sessionID}`;
-
-    const syncFromStorage = () => {
-      const dataStr = localStorage.getItem(sessionKey);
-      if (dataStr) {
-        try {
-          const data = JSON.parse(dataStr);
-          if (data.board) {
-            // Only update local board if different
-            if (JSON.stringify(data.board) !== JSON.stringify(board)) {
-              setBoard(data.board);
-            }
-          }
-          if (data.isX !== undefined && data.isX !== isX) {
-            setX(data.isX);
-          }
-          if (data.scores) {
-            setScores(data.scores);
-          }
-          if (data.round && data.round !== round) {
-            setRound(data.round);
-          }
-        } catch (e) {
-          console.error("Error parsing session data", e);
-        }
-      }
-    };
-
-    // Initial sync
-    syncFromStorage();
-
-    const handleStorageChange = (e) => {
-      if (e.key === sessionKey) {
-        syncFromStorage();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    const interval = setInterval(syncFromStorage, 500);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [gameMode, sessionID, board, isX, round]);
+  }, [isPlaying, isX, gameMode, winner, isDraw, aiMove]);
 
   return {
     board,
@@ -290,6 +305,7 @@ export function useTicTacToe(gameMode) {
     playAgain,
     goToMenu,
     sessionID,
-    player
+    player: playerRole,
+    opponentDisconnected,
   };
 }

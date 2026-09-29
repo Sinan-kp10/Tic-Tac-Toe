@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useCallback } from "react";
 import { flushSync } from "react-dom";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ThemeContext = createContext();
 
 export function ThemeContextProvider({ children }) {

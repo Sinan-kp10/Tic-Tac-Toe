@@ -1,3 +1,5 @@
+import React from "react";
+
 function GameStatus({ winner, isDraw, isX, isPlaying }) {
   return (
     <h2>
@@ -12,4 +14,4 @@ function GameStatus({ winner, isDraw, isX, isPlaying }) {
   );
 }
 
-export default GameStatus;
+export default React.memo(GameStatus);

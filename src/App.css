@@ -671,10 +671,29 @@
 
 .actions-container .restart-btn,
 .actions-container .play-again-btn,
-.actions-container .menu-btn {
-  margin-top: 0;
+.actions-container .menu-btn,
+.actions-container .back-btn {
+  margin: 0;
   flex: 1;
   width: auto;
+  min-width: 0;
+  padding: 14px 20px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actions-container .back-btn:hover {
+  transform: translateY(-3px);
+  background: var(--btn-glass-hover-bg);
+  color: var(--btn-glass-hover-color);
+  border-color: var(--btn-glass-hover-border);
+  box-shadow: var(--btn-glass-hover-shadow);
 }
 
 .restart-btn,
@@ -705,8 +724,7 @@
   transform: scale(0.97);
 }
 
-.menu-btn,
-.back-btn {
+.menu-btn {
   padding: 15px;
   border: 1px solid var(--btn-glass-border);
   border-radius: 14px;
@@ -721,8 +739,7 @@
   box-shadow: var(--card-shadow);
 }
 
-.menu-btn:hover,
-.back-btn:hover {
+.menu-btn:hover {
   transform: translateY(-3px);
   background: var(--btn-glass-hover-bg);
   color: var(--btn-glass-hover-color);
@@ -730,8 +747,57 @@
   box-shadow: var(--btn-glass-hover-shadow);
 }
 
-.menu-btn:active,
-.back-btn:active {
+.menu-btn:active {
+  transform: scale(0.97);
+}
+
+/* Normal, compact Back Button */
+.back-btn,
+.menu .back-btn,
+.session .back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 120px;
+  padding: 8px 20px;
+  margin: 12px 0 0 0;
+  border-radius: 10px;
+  border: 1px solid var(--btn-glass-border);
+  background: var(--btn-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--btn-glass-color);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.back-btn:hover,
+.menu .back-btn:hover,
+.session .back-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .back-btn:hover,
+[data-theme="light"] .menu .back-btn:hover,
+[data-theme="light"] .session .back-btn:hover {
+  background: rgba(226, 232, 240, 0.95);
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+.back-btn:active,
+.menu .back-btn:active,
+.session .back-btn:active {
   transform: scale(0.97);
 }
 
@@ -824,6 +890,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  align-items: center;
 }
 
 .modal-play-btn {
@@ -851,26 +918,44 @@
 }
 
 .modal-back-btn {
-  width: 100%;
-  padding: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-width: 120px;
+  padding: 8px 20px;
+  margin: 4px 0 0 0;
+  border-radius: 10px;
   border: 1px solid var(--btn-glass-border);
-  border-radius: 14px;
   background: var(--btn-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--btn-glass-color);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: 0.25s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .modal-back-btn:hover {
   transform: translateY(-2px);
-  background: var(--btn-glass-hover-bg);
-  color: var(--btn-glass-hover-color);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .modal-back-btn:hover {
+  background: rgba(226, 232, 240, 0.95);
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 .modal-back-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 @keyframes modalFadeIn {
@@ -1263,9 +1348,11 @@
 
   .restart-btn,
   .menu-btn,
-  .quit-btn {
-    padding: 13px;
+  .quit-btn,
+  .actions-container .back-btn {
+    padding: 12px;
     font-size: 15px;
+    height: 48px;
   }
 
   .restart-btn {
